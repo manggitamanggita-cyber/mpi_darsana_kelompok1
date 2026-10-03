@@ -1,0 +1,801 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Galaxy of Darsana</title>
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- FontAwesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;500;700;900&family=Rajdhani:wght@400;500;600;700&display=swap" rel="stylesheet">
+    
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: {
+                        'space': ['Orbitron', 'sans-serif'],
+                        'body': ['Rajdhani', 'sans-serif'],
+                    },
+                    colors: {
+                        space: {
+                            900: '#0a0a1a',
+                            800: '#141432',
+                            700: '#23234f',
+                        },
+                        nyaya: '#eab308',     // Yellow
+                        waisesika: '#b45309', // Brown/Amber
+                        samkhya: '#10b981',   // Emerald
+                        yoga: '#a855f7',      // Purple
+                        mimamsa: '#f97316',   // Orange
+                        vedanta: '#06b6d4',   // Cyan
+                    },
+                    animation: {
+                        'spin-slow': 'spin 20s linear infinite',
+                        'float': 'float 6s ease-in-out infinite',
+                        'pulse-glow': 'pulse-glow 2s cubic-bezier(0.4, 0, 0.6, 1) infinite',
+                    },
+                    keyframes: {
+                        float: {
+                            '0%, 100%': { transform: 'translateY(0)' },
+                            '50%': { transform: 'translateY(-10px)' },
+                        },
+                        'pulse-glow': {
+                            '0%, 100%': { opacity: 1, filter: 'brightness(1)' },
+                            '50%': { opacity: .7, filter: 'brightness(1.5)' },
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        body {
+            background-color: #050510;
+            background-image: 
+                radial-gradient(circle at 15% 50%, rgba(20, 20, 60, 0.4), transparent 25%),
+                radial-gradient(circle at 85% 30%, rgba(60, 20, 60, 0.4), transparent 25%);
+            color: #e2e8f0;
+            overflow-x: hidden;
+        }
+        
+        /* Starfield effect */
+        .stars {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%; z-index: -1;
+            pointer-events: none;
+            background: transparent url('data:image/svg+xml;utf8,<svg width="200" height="200" xmlns="http://www.w3.org/2000/svg"><circle cx="10" cy="10" r="1" fill="white" opacity="0.8"/><circle cx="50" cy="80" r="1.5" fill="white" opacity="0.6"/><circle cx="150" cy="30" r="1" fill="white" opacity="0.9"/><circle cx="180" cy="150" r="2" fill="white" opacity="0.4"/><circle cx="90" cy="180" r="1" fill="white" opacity="0.7"/></svg>') repeat;
+            animation: starsMove 100s linear infinite;
+        }
+        @keyframes starsMove { from { background-position: 0 0; } to { background-position: -1000px 1000px; } }
+
+        .glass-panel {
+            background: rgba(15, 15, 30, 0.7);
+            backdrop-filter: blur(12px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.5);
+        }
+
+        .planet-btn {
+            transition: all 0.3s ease;
+        }
+        .planet-btn:hover:not(:disabled) {
+            transform: scale(1.1);
+            filter: brightness(1.2);
+        }
+        .planet-btn:disabled {
+            filter: grayscale(1) opacity(0.5);
+            cursor: not-allowed;
+        }
+        
+        .line-connector {
+            position: absolute;
+            z-index: 0;
+            border-top: 2px dashed rgba(255, 255, 255, 0.2);
+            transform-origin: 0 0;
+        }
+
+        /* Custom Scrollbar */
+        ::-webkit-scrollbar { width: 8px; }
+        ::-webkit-scrollbar-track { background: #0a0a1a; }
+        ::-webkit-scrollbar-thumb { background: #4f46e5; border-radius: 4px; }
+    </style>
+</head>
+<body class="font-body min-h-screen flex flex-col relative">
+    <div class="stars"></div>
+
+    <header class="glass-panel sticky top-0 z-40 px-4 py-3 border-b border-indigo-500/30">
+        <div class="max-w-6xl mx-auto flex flex-wrap items-center justify-between gap-4">
+            <!-- Player Info -->
+            <div class="flex items-center gap-3">
+                <div class="relative w-12 h-12 rounded-full bg-gradient-to-br from-indigo-500 to-purple-600 flex items-center justify-center border-2 border-cyan-400 shadow-[0_0_15px_rgba(6,182,212,0.5)]">
+                    <i class="fa-solid fa-user-astronaut text-white text-xl"></i>
+                </div>
+                <div>
+                    <h1 class="font-space font-bold text-lg text-white tracking-wider">Astro Penjelajah</h1>
+                    <div class="flex items-center gap-3 text-sm font-semibold">
+                        <span class="text-cyan-400"><i class="fa-solid fa-bolt mr-1"></i><span id="uiXp">0</span> XP</span>
+                        <span class="text-slate-400">|</span>
+                        <span class="text-purple-400"><i class="fa-solid fa-gem mr-1"></i><span id="uiCrystals">0</span>/6 Kristal</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Global Progress -->
+            <div class="flex-1 max-w-md min-w-[200px]">
+                <div class="flex justify-between text-xs font-space mb-1 text-slate-300">
+                    <span>Misi Restorasi Galaksi</span>
+                    <span id="uiProgressPercent">0%</span>
+                </div>
+                <div class="w-full bg-space-800 h-3 rounded-full overflow-hidden border border-space-700">
+                    <div id="uiProgressBar" class="bg-gradient-to-r from-cyan-500 via-indigo-500 to-purple-500 h-full transition-all duration-1000 w-0"></div>
+                </div>
+            </div>
+
+            <!-- Controls -->
+            <button onclick="resetGame()" class="text-xs bg-red-500/20 text-red-400 hover:bg-red-500/40 px-3 py-1.5 rounded border border-red-500/50 transition font-space">
+                <i class="fa-solid fa-power-off"></i> Reset
+            </button>
+        </div>
+    </header>
+
+    <main class="flex-1 relative w-full max-w-6xl mx-auto p-4 flex flex-col md:flex-row gap-6 overflow-hidden mt-4">
+        
+        <!-- Left Panel: Story & Badges -->
+        <aside class="w-full md:w-1/4 flex flex-col gap-4 z-10">
+            <!-- Mission Brief -->
+            <div class="glass-panel p-5 rounded-xl border border-indigo-500/30 relative overflow-hidden">
+                <div class="absolute -right-4 -top-4 text-indigo-500/10 text-6xl"><i class="fa-brands fa-galactic-republic"></i></div>
+                <h2 class="font-space font-bold text-cyan-400 text-lg mb-2 border-b border-cyan-400/30 pb-2">Log Misi</h2>
+                <p class="text-sm text-slate-300 leading-relaxed" id="storyBrief">
+                    Tahun 3026. Galaksi Pengetahuan meredup. Temukan 6 Kristal Kebijaksanaan (Sad Darsana) di berbagai planet untuk menyalakan kembali 'Wisdom Core'.
+                </p>
+            </div>
+
+            <!-- Badges Collection -->
+            <div class="glass-panel p-5 rounded-xl border border-purple-500/30 flex-1">
+                <h2 class="font-space font-bold text-purple-400 text-lg mb-3 border-b border-purple-400/30 pb-2">Koleksi Badge</h2>
+                <div class="grid grid-cols-2 gap-3" id="badgeContainer">
+                    <!-- Badges rendered here via JS -->
+                </div>
+            </div>
+        </aside>
+
+        <!-- Right Panel: The Galaxy Map -->
+        <div class="w-full md:w-3/4 glass-panel rounded-2xl border border-cyan-500/20 relative min-h-[600px] flex items-center justify-center overflow-hidden" id="galaxyMapArea">
+            <!-- Decorative Map Grid -->
+            <div class="absolute inset-0 bg-[url('data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNDAiIGhlaWdodD0iNDAiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+PHBhdGggZD0iTTAgMGg0MHY0MEgweiIgZmlsbD0ibm9uZSIvPjxwYXRoIGQ9Ik0wIDM5LjVoNDBWNDBIMHptMzkuNSAwVjBoLjV2NDB6IiBmaWxsPSJyZ2JhKDI1NSwyNTUsMjU1LDAuMDUpIi8+PC9zdmc+')] z-0"></div>
+            
+            <!-- Map Container for Planets -->
+            <div class="relative w-full h-full z-10" id="planetsContainer">
+                <!-- Planets will be dynamically placed here -->
+            </div>
+
+            <!-- Center Boss (Avidya) -->
+            <div id="bossNode" class="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 z-20 flex flex-col items-center hidden transition-all duration-1000">
+                <button onclick="startBossFight()" class="w-24 h-24 rounded-full bg-black border-4 border-red-600 shadow-[0_0_40px_rgba(220,38,38,0.8)] flex items-center justify-center animate-pulse relative group">
+                    <div class="absolute inset-0 rounded-full border border-red-500 animate-ping opacity-50"></div>
+                    <i class="fa-solid fa-eye text-red-500 text-4xl group-hover:text-red-400 transition"></i>
+                </button>
+                <span class="mt-3 font-space font-bold text-red-500 tracking-widest text-center text-sm">THE SHADOW<br>OF AVIDYA</span>
+            </div>
+        </div>
+    </main>
+
+    <div id="missionModal" class="fixed inset-0 bg-black/90 backdrop-blur-md z-50 hidden flex flex-col items-center justify-center p-4">
+        <div class="glass-panel w-full max-w-3xl rounded-2xl border border-cyan-500/50 shadow-[0_0_50px_rgba(6,182,212,0.2)] overflow-hidden flex flex-col max-h-[90vh]">
+            
+            <!-- Modal Header -->
+            <div id="modalHeader" class="p-4 border-b border-white/10 flex justify-between items-center bg-white/5">
+                <div class="flex items-center gap-3">
+                    <div id="modalPlanetIcon" class="w-10 h-10 rounded-full flex items-center justify-center text-xl shadow-lg"></div>
+                    <h2 id="modalPlanetName" class="font-space font-bold text-xl text-white tracking-wide">Planet Name</h2>
+                </div>
+                <button onclick="closeModal()" class="text-slate-400 hover:text-white transition"><i class="fa-solid fa-xmark text-2xl"></i></button>
+            </div>
+
+            <!-- Modal Body -->
+            <div class="p-6 overflow-y-auto flex-1 custom-scrollbar relative">
+                <!-- Material Section -->
+                <div id="materialSection" class="space-y-4 animate-fade-in">
+                    <div class="inline-block px-3 py-1 rounded bg-indigo-500/20 text-indigo-300 font-space text-xs font-bold mb-2">Transmisi Data Diterima</div>
+                    <h3 id="materialTitle" class="text-2xl font-bold text-white mb-2 font-body">Materi</h3>
+                    <div id="materialContent" class="text-slate-300 leading-relaxed space-y-3 text-lg"></div>
+                    
+                    <div class="mt-8 flex justify-end">
+                        <button onclick="showMission()" class="bg-cyan-600 hover:bg-cyan-500 text-white font-space font-bold px-6 py-3 rounded-lg transition flex items-center gap-2 shadow-[0_0_15px_rgba(6,182,212,0.4)]">
+                            Mulai Misi <i class="fa-solid fa-rocket"></i>
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Mission/Quiz Section -->
+                <div id="missionSection" class="hidden space-y-6 animate-fade-in">
+                    <div class="inline-block px-3 py-1 rounded bg-yellow-500/20 text-yellow-300 font-space text-xs font-bold mb-2"><i class="fa-solid fa-triangle-exclamation mr-1"></i> Tantangan Aktif</div>
+                    <p id="missionInstruction" class="text-xl font-bold text-white font-body mb-4"></p>
+                    
+                    <!-- Dynamic Interactive Area -->
+                    <div id="interactiveArea" class="bg-black/30 p-5 rounded-xl border border-white/10 min-h-[200px]">
+                        <!-- Rendered by JS -->
+                    </div>
+                </div>
+                
+                <!-- Success Result Section -->
+                <div id="resultSection" class="hidden flex flex-col items-center justify-center text-center py-10 space-y-4 animate-fade-in">
+                    <div id="resultCrystal" class="w-24 h-24 rounded-full flex items-center justify-center text-5xl shadow-[0_0_30px_currentColor] animate-float">
+                        <i class="fa-solid fa-gem text-white"></i>
+                    </div>
+                    <h3 class="font-space font-bold text-2xl text-white">Misi Berhasil!</h3>
+                    <p class="text-slate-300">Kamu mendapatkan Kristal Kebijaksanaan dan XP.</p>
+                    <div id="resultRewards" class="flex gap-4 mt-4">
+                        <!-- Rendered by JS -->
+                    </div>
+                    <button onclick="closeModalAndUpdate()" class="mt-6 bg-white/10 hover:bg-white/20 text-white border border-white/30 font-space px-6 py-2 rounded transition">
+                        Kembali ke Peta
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div id="toastContainer" class="fixed bottom-5 right-5 z-50 flex flex-col gap-3 pointer-events-none"></div>
+
+    <script>
+        // --- DATA DEFINITIONS ---
+        
+        // Colors mapping based on tailwind config
+        const colors = {
+            nyaya: '#eab308', waisesika: '#b45309', samkhya: '#10b981', 
+            yoga: '#a855f7', mimamsa: '#f97316', vedanta: '#06b6d4'
+        };
+
+        const gData = {
+            planets: [
+                {
+                    id: 1, key: 'nyaya', name: "Planet Nyaya", color: colors.nyaya, icon: 'fa-scale-balanced',
+                    x: '15%', y: '20%', req: 0,
+                    materi: {
+                        title: "Ajaran Logika",
+                        text: `Selamat datang di Nyaya. Atmosfer di sini murni terdiri dari logika. <br><br>
+                        Nyaya Darsana, didirikan oleh Rsi Gautama, mengajarkan bahwa pengetahuan yang benar (Prama) adalah jalan menuju pembebasan. Mereka menggunakan empat sumber pengetahuan (Pramana):<br>
+                        1. <b>Pratyaksa</b> (Pengamatan langsung)<br>
+                        2. <b>Anumana</b> (Penyimpulan logika)<br>
+                        3. <b>Upamana</b> (Perbandingan)<br>
+                        4. <b>Sabda</b> (Wahyu/kesaksian ahli).`
+                    },
+                    mission: {
+                        type: 'mcq',
+                        instruction: "Tentukan kesimpulan logis (Anumana) dari petunjuk berikut: 'Di mana ada asap, di situ pasti ada api. Kamu melihat asap di bukit itu.'",
+                        options: [
+                            "Bukit itu sedang berasap karena kabut.",
+                            "Pasti ada api yang menyala di bukit itu.",
+                            "Asap tidak selalu berarti ada api."
+                        ],
+                        answerIndex: 1
+                    },
+                    rewards: { xp: 100, badge: "Master Logika", badgeIcon: "fa-brain" }
+                },
+                {
+                    id: 2, key: 'waisesika', name: "Planet Waisesika", color: colors.waisesika, icon: 'fa-cubes',
+                    x: '40%', y: '15%', req: 1,
+                    materi: {
+                        title: "Hakikat Materi",
+                        text: `Waisesika, diajarkan oleh Rsi Kanada, menganalisis alam semesta hingga ke partikel terkecil.<br><br>
+                        Mereka mengklasifikasikan segala yang ada ke dalam kategori (Padartha), dimulai dari substansi (Dravya) seperti tanah, air, api, udara, ruang, waktu, pikiran, dan jiwa. Waisesika berfokus pada pemahaman unsur alam (fisika kuno) untuk memahami tatanan kosmos.`
+                    },
+                    mission: {
+                        type: 'mcq',
+                        instruction: "Berdasarkan ajaran Waisesika, manakah di bawah ini yang merupakan bagian dari Substansi (Dravya) dasar pembentuk alam semesta?",
+                        options: [
+                            "Emosi, Khayalan, dan Mimpi.",
+                            "Tanah, Air, Api, Udara, dan Ruang.",
+                            "Kekayaan, Kekuasaan, dan Ketenaran."
+                        ],
+                        answerIndex: 1
+                    },
+                    rewards: { xp: 100, badge: "Penjelajah Materi", badgeIcon: "fa-atom" }
+                },
+                {
+                    id: 3, key: 'samkhya', name: "Planet Samkhya", color: colors.samkhya, icon: 'fa-yin-yang',
+                    x: '75%', y: '25%', req: 2,
+                    materi: {
+                        title: "Dualisme Kosmis",
+                        text: `Planet ini terbagi menjadi dua energi kutub. Ini adalah inti ajaran Samkhya oleh Rsi Kapila.<br><br>
+                        Alam semesta tercipta dari pertemuan dua entitas abadi:<br>
+                        <b>Purusa</b>: Kesadaran murni, jiwa, pasif, sang pengamat.<br>
+                        <b>Prakrti</b>: Materi dasar, aktif, pencipta bentuk fisik dan mental.<br>
+                        Penderitaan terjadi karena Purusa (jiwa) merasa terikat dengan Prakrti (materi).`
+                    },
+                    mission: {
+                        type: 'match', // Simulated matching via MCQ for simplicity in this format
+                        instruction: "Analisis sifat dari konsep berikut: 'Kesadaran murni, tidak berbentuk, pasif sebagai pengamat'. Konsep ini merujuk pada...",
+                        options: ["Prakrti", "Purusa", "Padartha"],
+                        answerIndex: 1
+                    },
+                    rewards: { xp: 150, badge: "Penjaga Keseimbangan", badgeIcon: "fa-scale-unbalanced" }
+                },
+                {
+                    id: 4, key: 'yoga', name: "Planet Yoga", color: colors.yoga, icon: 'fa-person-praying',
+                    x: '80%', y: '65%', req: 3,
+                    materi: {
+                        title: "Pengendalian Diri",
+                        text: `Gravitasi di sini sangat kuat; kamu harus memusatkan pikiran. Ajaran Yoga oleh Rsi Patanjali berfokus pada praktik.<br><br>
+                        Intinya adalah menghentikan fluktuasi pikiran untuk mencapai pencerahan. Jalan utamanya adalah <b>Astangga Yoga</b> (8 tahapan):<br>
+                        Yama (etika eksternal), Niyama (disiplin internal), Asana (postur), Pranayama (nafas), Pratyahara (penarikan indra), Dharana (konsentrasi), Dhyana (meditasi), Samadhi (penyatuan).`
+                    },
+                    mission: {
+                        type: 'sequence', // Simulated via specific question
+                        instruction: "Tantangan Konsentrasi: Sebelum mencapai 'Dhyana' (meditasi) dan 'Samadhi' (penyatuan akhir), seorang yogi harus memusatkan pikirannya pada satu titik. Tahapan pemusatan pikiran ini disebut...",
+                        options: ["Asana (Postur Tubuh)", "Pranayama (Pengaturan Nafas)", "Dharana (Konsentrasi)"],
+                        answerIndex: 2
+                    },
+                    rewards: { xp: 150, badge: "Cosmic Yogi", badgeIcon: "fa-om" }
+                },
+                {
+                    id: 5, key: 'mimamsa', name: "Planet Mimamsa", color: colors.mimamsa, icon: 'fa-fire',
+                    x: '45%', y: '80%', req: 4,
+                    materi: {
+                        title: "Dharma & Ritual",
+                        text: `Masyarakat di sini sangat tertib menjalankan tugas kosmis mereka.<br><br>
+                        Mimamsa (Purva Mimamsa) yang dirintis Rsi Jaimini menekankan tindakan (Karma) dan pelaksanaan Ritual (Yajña) sesuai dengan Veda. Mereka percaya bahwa menjalankan Dharma (kewajiban) dengan ikhlas akan menjaga keteraturan kosmos dan membawa pelakunya ke surga (svarga).`
+                    },
+                    mission: {
+                        type: 'mcq',
+                        instruction: "Penduduk planet meminta bantuan: 'Apa cara terbaik untuk menjaga keseimbangan tatanan alam semesta menurut ajaran kami (Mimamsa)?'",
+                        options: [
+                            "Meninggalkan dunia dan bertapa di hutan.",
+                            "Melaksanakan Dharma dan Yajña sesuai petunjuk suci Veda.",
+                            "Hanya mempelajari logika tanpa melakukan tindakan nyata."
+                        ],
+                        answerIndex: 1
+                    },
+                    rewards: { xp: 200, badge: "Guardian of Dharma", badgeIcon: "fa-shield-halved" }
+                },
+                {
+                    id: 6, key: 'vedanta', name: "Planet Vedanta", color: colors.vedanta, icon: 'fa-sun',
+                    x: '15%', y: '60%', req: 5,
+                    materi: {
+                        title: "Kebenaran Tertinggi",
+                        text: `Kamu telah mencapai puncak pengetahuan kosmis.<br><br>
+                        Vedanta (Akhir Veda/Upanisad) yang dikodifikasi oleh Rsi Badarayana mengajarkan tentang esensi terdalam alam semesta. Konsep utamanya adalah <b>Brahman</b> (Kebenaran Absolut/Tuhan) dan <b>Atman</b> (Jiwa individu).<br>
+                        Tujuan akhirnya adalah <b>Moksa</b>, yaitu kesadaran bahwa Atman dan Brahman pada hakikatnya adalah satu (Tat Tvam Asi).`
+                    },
+                    mission: {
+                        type: 'mcq',
+                        instruction: "Pecahkan teka-teki filosofis ini untuk mendapatkan kristal terakhir: 'Meskipun berada di dalam tubuh setiap makhluk, ia tidak berbeda dari Energi Utama Alam Semesta.' Apa hubungan yang dimaksud?",
+                        options: [
+                            "Atman dan Brahman adalah entitas yang selalu terpisah.",
+                            "Atman bermula dari Prakrti, sedangkan Brahman dari Purusa.",
+                            "Esensi Atman (Jiwa) menyatu dan sama dengan Brahman (Tuhan)."
+                        ],
+                        answerIndex: 2
+                    },
+                    rewards: { xp: 300, badge: "Sage of Vedanta", badgeIcon: "fa-eye-slash" }
+                }
+            ],
+            boss: {
+                questions: [
+                    { q: "Aliran manakah yang membagi realitas menjadi Purusa dan Prakrti?", a: ["Nyaya", "Samkhya", "Vedanta"], ans: 1 },
+                    { q: "Apa tujuan akhir (Moksa) menurut ajaran Vedanta?", a: ["Menyatunya Atman dengan Brahman", "Pergi ke Svarga (Surga)", "Menguasai seluruh postur Asana"], ans: 0 },
+                    { q: "Dari keenam Sad Darsana, aliran mana yang sangat berfokus pada pelaksanaan ritual (Yajna)?", a: ["Mimamsa", "Waisesika", "Yoga"], ans: 0 }
+                ]
+            }
+        };
+
+        // --- GAME STATE ---
+        let state = {
+            xp: 0,
+            planetsCompleted: [], // Array of completed planet IDs
+            badges: [], // Array of badge names
+            currentActivePlanet: null,
+            bossBeaten: false
+        };
+
+        // Load from local storage if exists
+        function loadState() {
+            const saved = localStorage.getItem('darsanaState');
+            if (saved) {
+                state = JSON.parse(saved);
+            }
+        }
+        function saveState() {
+            localStorage.setItem('darsanaState', JSON.stringify(state));
+        }
+        function resetGame() {
+            if(confirm("Peringatan: Navigasi komputer akan direset. Semua progres akan hilang. Lanjutkan?")) {
+                localStorage.removeItem('darsanaState');
+                location.reload();
+            }
+        }
+
+        // --- STREAMING_CHUNK: Core UI Rendering ---
+        function initUI() {
+            loadState();
+            updateHUD();
+            renderMap();
+            renderBadges();
+            checkBossAvailability();
+        }
+
+        function updateHUD() {
+            document.getElementById('uiXp').innerText = state.xp;
+            document.getElementById('uiCrystals').innerText = state.planetsCompleted.length;
+            
+            let percent = Math.floor((state.planetsCompleted.length / 6) * 100);
+            if(state.bossBeaten) percent = 100;
+            
+            document.getElementById('uiProgressPercent').innerText = `${percent}%`;
+            document.getElementById('uiProgressBar').style.width = `${percent}%`;
+        }
+
+        function renderMap() {
+            const container = document.getElementById('planetsContainer');
+            container.innerHTML = '';
+            
+            gData.planets.forEach((p, index) => {
+                const isCompleted = state.planetsCompleted.includes(p.id);
+                // Unlock if req is 0, or if the required previous planet is completed
+                const isUnlocked = p.req === 0 || state.planetsCompleted.includes(p.req);
+                
+                let btnStateClass = "";
+                let iconClass = `text-${p.key} opacity-80`; // fallback
+                let statusIcon = "";
+
+                if (isCompleted) {
+                    btnStateClass = `border-[${p.color}] shadow-[0_0_20px_${p.color}] bg-white/10`;
+                    iconClass = "text-white";
+                    statusIcon = `<div class="absolute -top-2 -right-2 bg-green-500 text-white rounded-full w-6 h-6 flex items-center justify-center text-xs border border-white"><i class="fa-solid fa-check"></i></div>`;
+                } else if (isUnlocked) {
+                    btnStateClass = `border-[${p.color}] border-dashed bg-black/40 hover:bg-[${p.color}]/20 animate-pulse`;
+                    statusIcon = `<div class="absolute -top-2 -right-2 bg-yellow-500 text-white rounded-full w-6 h-6 flex items-center justify-center text-xs border border-white"><i class="fa-solid fa-exclamation"></i></div>`;
+                } else {
+                    btnStateClass = "border-slate-700 bg-black/60 opacity-50";
+                    iconClass = "text-slate-500";
+                    statusIcon = `<div class="absolute -top-2 -right-2 bg-slate-800 text-slate-400 rounded-full w-6 h-6 flex items-center justify-center text-xs border border-slate-600"><i class="fa-solid fa-lock"></i></div>`;
+                }
+
+                const planetHTML = `
+                    <div class="absolute flex flex-col items-center group" style="left: ${p.x}; top: ${p.y};">
+                        <button 
+                            onclick="openPlanet(${p.id})" 
+                            ${!isUnlocked && !isCompleted ? 'disabled' : ''}
+                            class="planet-btn w-16 h-16 rounded-full border-2 flex items-center justify-center relative backdrop-blur-sm z-10 transition-all duration-300 ${btnStateClass}"
+                            style="border-color: ${isCompleted || isUnlocked ? p.color : ''};"
+                        >
+                            <i class="fa-solid ${p.icon} text-2xl ${iconClass}"></i>
+                            ${statusIcon}
+                        </button>
+                        <span class="mt-2 font-space text-xs font-bold bg-black/60 px-2 py-1 rounded border border-white/10 text-slate-300 group-hover:text-white transition">
+                            ${p.name}
+                        </span>
+                    </div>
+                `;
+                container.insertAdjacentHTML('beforeend', planetHTML);
+
+                // Draw lines to next node if available for visual pathing
+                if (index < gData.planets.length - 1) {
+                    // Complex SVG lines are hard in pure HTML without fixed dims, 
+                    // skipping visual lines for responsive stability, layout relies on absolute pos.
+                }
+            });
+        }
+
+        function renderBadges() {
+            const container = document.getElementById('badgeContainer');
+            container.innerHTML = '';
+            
+            gData.planets.forEach(p => {
+                const hasBadge = state.badges.includes(p.rewards.badge);
+                const bHTML = `
+                    <div class="flex flex-col items-center p-2 rounded-lg border ${hasBadge ? `border-[${p.color}] bg-[${p.color}]/10` : 'border-slate-800 bg-black/40 opacity-50'} text-center h-24 justify-center transition">
+                        <div class="w-10 h-10 rounded-full flex items-center justify-center text-lg mb-1 ${hasBadge ? `bg-[${p.color}] text-white shadow-[0_0_10px_${p.color}]` : 'bg-slate-800 text-slate-500'}">
+                            <i class="fa-solid ${p.rewards.badgeIcon}"></i>
+                        </div>
+                        <span class="text-[10px] font-space font-bold ${hasBadge ? 'text-white' : 'text-slate-500'} leading-tight">${p.rewards.badge}</span>
+                    </div>
+                `;
+                container.insertAdjacentHTML('beforeend', bHTML);
+            });
+            
+            // Grand Master Badge
+            const hasGM = state.bossBeaten;
+            const gmHTML = `
+                <div class="col-span-2 flex items-center p-3 rounded-lg border ${hasGM ? 'border-yellow-400 bg-yellow-400/10' : 'border-slate-800 bg-black/40 opacity-50'} gap-3 mt-2">
+                    <div class="w-12 h-12 rounded-full flex items-center justify-center text-xl shrink-0 ${hasGM ? 'bg-yellow-500 text-black shadow-[0_0_15px_yellow]' : 'bg-slate-800 text-slate-500'}">
+                        <i class="fa-solid fa-crown"></i>
+                    </div>
+                    <div class="text-left">
+                        <h4 class="font-space font-bold text-sm ${hasGM ? 'text-yellow-400' : 'text-slate-500'}">Grand Master Darsana</h4>
+                        <p class="text-[10px] text-slate-400">Selamatkan Galaksi Pengetahuan</p>
+                    </div>
+                </div>
+            `;
+            container.insertAdjacentHTML('beforeend', gmHTML);
+        }
+
+        function checkBossAvailability() {
+            const bossNode = document.getElementById('bossNode');
+            if (state.planetsCompleted.length === 6 && !state.bossBeaten) {
+                bossNode.classList.remove('hidden');
+                document.getElementById('storyBrief').innerHTML = "<span class='text-red-400 font-bold'>ANOMALI TERDETEKSI:</span> 6 Kristal bereaksi. Entitas 'The Shadow of Avidya' muncul di pusat galaksi. Kalahkan untuk menyatukan kristal!";
+            } else if (state.bossBeaten) {
+                bossNode.classList.add('hidden');
+                document.getElementById('storyBrief').innerHTML = "<span class='text-cyan-400 font-bold'>MISI SELESAI:</span> Galaksi Pengetahuan kembali bersinar terang. Kebijaksanaan Sad Darsana telah dipulihkan. Hormat kami, Grand Master.";
+                document.getElementById('galaxyMapArea').classList.add('shadow-[inset_0_0_100px_rgba(6,182,212,0.3)]');
+            }
+        }
+
+        // --- STREAMING_CHUNK: Modal & Interaction Logic ---
+        
+        function openPlanet(id) {
+            const p = gData.planets.find(x => x.id === id);
+            state.currentActivePlanet = p;
+
+            // Setup Modal UI
+            document.getElementById('modalPlanetName').innerText = p.name;
+            document.getElementById('modalPlanetIcon').className = `w-10 h-10 rounded-full flex items-center justify-center text-xl shadow-lg bg-[${p.color}]/20 text-[${p.color}] border border-[${p.color}]`;
+            document.getElementById('modalPlanetIcon').innerHTML = `<i class="fa-solid ${p.icon}"></i>`;
+            
+            document.getElementById('materialTitle').innerText = p.materi.title;
+            document.getElementById('materialContent').innerHTML = p.materi.text;
+
+            // Reset views
+            document.getElementById('materialSection').classList.remove('hidden');
+            document.getElementById('missionSection').classList.add('hidden');
+            document.getElementById('resultSection').classList.add('hidden');
+
+            const isCompleted = state.planetsCompleted.includes(p.id);
+            if (isCompleted) {
+                // If already done, skip mission, show summary
+                showSuccessState(p, true);
+            }
+
+            document.getElementById('missionModal').classList.remove('hidden');
+        }
+
+        function closeModal() {
+            document.getElementById('missionModal').classList.add('hidden');
+            state.currentActivePlanet = null;
+        }
+
+        function closeModalAndUpdate() {
+            closeModal();
+            updateHUD();
+            renderMap();
+            renderBadges();
+            checkBossAvailability();
+            saveState();
+        }
+
+        function showMission() {
+            const p = state.currentActivePlanet;
+            document.getElementById('materialSection').classList.add('hidden');
+            document.getElementById('missionSection').classList.remove('hidden');
+            
+            document.getElementById('missionInstruction').innerText = p.mission.instruction;
+            
+            const ia = document.getElementById('interactiveArea');
+            ia.innerHTML = ''; // clear
+
+            // Render MCQ Options
+            p.mission.options.forEach((opt, idx) => {
+                const btn = document.createElement('button');
+                btn.className = "w-full text-left bg-space-800 hover:bg-indigo-900/50 border border-space-700 p-4 rounded-xl mb-3 transition text-sm font-medium text-slate-200 group flex items-start gap-3";
+                btn.innerHTML = `
+                    <div class="w-6 h-6 rounded-full border border-slate-500 flex items-center justify-center shrink-0 group-hover:border-indigo-400 transition mt-0.5">
+                        <i class="fa-solid fa-circle text-[8px] text-transparent group-hover:text-indigo-400"></i>
+                    </div>
+                    <span>${opt}</span>
+                `;
+                btn.onclick = () => checkAnswer(idx);
+                ia.appendChild(btn);
+            });
+        }
+
+        function checkAnswer(selectedIdx) {
+            const p = state.currentActivePlanet;
+            const ia = document.getElementById('interactiveArea');
+            const btns = ia.querySelectorAll('button');
+            
+            // Disable buttons
+            btns.forEach(b => b.disabled = true);
+
+            if (selectedIdx === p.mission.answerIndex) {
+                // Correct
+                btns[selectedIdx].classList.replace('bg-space-800', 'bg-green-900/40');
+                btns[selectedIdx].classList.replace('border-space-700', 'border-green-500');
+                btns[selectedIdx].querySelector('i').className = "fa-solid fa-check text-green-400";
+                
+                showToast("Jawaban Benar!", "+20 XP", "fa-check", "text-green-400");
+                state.xp += 20; // Question XP
+
+                setTimeout(() => {
+                    handlePlanetSuccess(p);
+                }, 1000);
+            } else {
+                // Wrong
+                btns[selectedIdx].classList.replace('bg-space-800', 'bg-red-900/40');
+                btns[selectedIdx].classList.replace('border-space-700', 'border-red-500');
+                btns[selectedIdx].querySelector('i').className = "fa-solid fa-xmark text-red-400";
+                
+                showToast("Sistem Error", "Logika tidak sesuai. Pelajari kembali materi.", "fa-triangle-exclamation", "text-red-400");
+                
+                setTimeout(() => {
+                    // Reset to try again
+                    document.getElementById('missionSection').classList.add('hidden');
+                    document.getElementById('materialSection').classList.remove('hidden');
+                }, 2000);
+            }
+        }
+
+        function handlePlanetSuccess(p) {
+            if (!state.planetsCompleted.includes(p.id)) {
+                state.planetsCompleted.push(p.id);
+                state.xp += p.rewards.xp; // Mission XP
+                if (!state.badges.includes(p.rewards.badge)) {
+                    state.badges.push(p.rewards.badge);
+                    showToast("Badge Diperoleh!", p.rewards.badge, "fa-medal", "text-yellow-400");
+                }
+            }
+            showSuccessState(p, false);
+        }
+
+        function showSuccessState(p, alreadyDone) {
+            document.getElementById('materialSection').classList.add('hidden');
+            document.getElementById('missionSection').classList.add('hidden');
+            document.getElementById('resultSection').classList.remove('hidden');
+
+            document.getElementById('resultCrystal').style.color = p.color;
+            document.getElementById('resultCrystal').style.backgroundColor = `${p.color}20`;
+
+            const rewardsDiv = document.getElementById('resultRewards');
+            if (alreadyDone) {
+                rewardsDiv.innerHTML = `<span class="bg-black/30 border border-slate-700 px-4 py-2 rounded text-sm text-slate-400">Kristal telah diamankan.</span>`;
+            } else {
+                rewardsDiv.innerHTML = `
+                    <div class="bg-black/30 border border-cyan-500/30 px-4 py-2 rounded text-sm text-cyan-300 font-space font-bold">+${p.rewards.xp} XP</div>
+                    <div class="bg-black/30 border border-yellow-500/30 px-4 py-2 rounded text-sm text-yellow-300 font-space font-bold"><i class="fa-solid fa-medal mr-1"></i> ${p.rewards.badge}</div>
+                `;
+            }
+        }
+
+        // --- STREAMING_CHUNK: Boss Fight Logic ---
+        let bossQIndex = 0;
+
+        function startBossFight() {
+            bossQIndex = 0;
+            
+            document.getElementById('modalPlanetName').innerText = "VORTEX OF AVIDYA";
+            document.getElementById('modalPlanetIcon').className = `w-10 h-10 rounded-full flex items-center justify-center text-xl shadow-[0_0_15px_red] bg-black text-red-500 border-2 border-red-500 animate-pulse`;
+            document.getElementById('modalPlanetIcon').innerHTML = `<i class="fa-solid fa-eye"></i>`;
+            
+            document.getElementById('materialTitle').innerText = "Peringatan Sistem Kritis!";
+            document.getElementById('materialTitle').className = "text-2xl font-bold text-red-500 mb-2 font-space blink";
+            
+            document.getElementById('materialContent').innerHTML = `
+                <p class="text-red-200">Entitas Avidya (Ketidaktahuan) menahan energi kristal untuk menyatu. Kamu harus membuktikan pemahaman paripurna tentang Sad Darsana untuk menghancurkannya.</p>
+                <p class="text-white mt-4 font-bold text-center">Jawab 3 pertanyaan beruntun tanpa salah!</p>
+            `;
+
+            // Hijack the "Mulai Misi" button action specifically for boss
+            const btn = document.querySelector('#materialSection button');
+            btn.onclick = nextBossQuestion;
+            btn.className = "bg-red-700 hover:bg-red-600 text-white font-space font-bold px-6 py-3 rounded-lg transition flex items-center gap-2 shadow-[0_0_15px_rgba(220,38,38,0.5)]";
+            btn.innerHTML = `Mulai Pertempuran <i class="fa-solid fa-crosshairs"></i>`;
+
+            document.getElementById('materialSection').classList.remove('hidden');
+            document.getElementById('missionSection').classList.add('hidden');
+            document.getElementById('resultSection').classList.add('hidden');
+            
+            document.getElementById('missionModal').classList.remove('hidden');
+        }
+
+        function nextBossQuestion() {
+            if (bossQIndex >= gData.boss.questions.length) {
+                winBossFight();
+                return;
+            }
+
+            document.getElementById('materialSection').classList.add('hidden');
+            document.getElementById('missionSection').classList.remove('hidden');
+            
+            const q = gData.boss.questions[bossQIndex];
+            document.getElementById('missionInstruction').innerText = `Tahap ${bossQIndex + 1}/3: ${q.q}`;
+            document.getElementById('missionInstruction').className = "text-xl font-bold text-red-400 font-body mb-4";
+            
+            const ia = document.getElementById('interactiveArea');
+            ia.className = "bg-black p-5 rounded-xl border border-red-500/50 min-h-[200px] shadow-[inset_0_0_20px_rgba(220,38,38,0.2)]";
+            ia.innerHTML = '';
+
+            q.a.forEach((opt, idx) => {
+                const btn = document.createElement('button');
+                btn.className = "w-full text-left bg-red-950/30 hover:bg-red-900/50 border border-red-800 p-4 rounded-xl mb-3 transition text-sm font-medium text-slate-200 group";
+                btn.innerHTML = `<span>${opt}</span>`;
+                btn.onclick = () => checkBossAnswer(idx, q.ans);
+                ia.appendChild(btn);
+            });
+        }
+
+        function checkBossAnswer(selectedIdx, correctIdx) {
+            const ia = document.getElementById('interactiveArea');
+            const btns = ia.querySelectorAll('button');
+            btns.forEach(b => b.disabled = true);
+
+            if (selectedIdx === correctIdx) {
+                btns[selectedIdx].classList.add('bg-green-900/50', 'border-green-500');
+                showToast("Serangan Berhasil!", "Pertahanan Avidya melemah.", "fa-bolt", "text-yellow-400");
+                bossQIndex++;
+                setTimeout(nextBossQuestion, 1200);
+            } else {
+                btns[selectedIdx].classList.add('bg-red-600', 'text-white');
+                showToast("Serangan Gagal", "Avidya memulihkan diri. Mulai dari awal!", "fa-skull", "text-red-500");
+                bossQIndex = 0;
+                setTimeout(() => {
+                    closeModal();
+                    startBossFight(); // Restart
+                }, 2000);
+            }
+        }
+
+        function winBossFight() {
+            state.bossBeaten = true;
+            state.xp += 500; // Boss XP
+            
+            document.getElementById('missionSection').classList.add('hidden');
+            document.getElementById('resultSection').classList.remove('hidden');
+            
+            const cr = document.getElementById('resultCrystal');
+            cr.style.color = '#fff';
+            cr.style.backgroundColor = 'rgba(255,255,255,0.2)';
+            cr.className = "w-32 h-32 rounded-full flex items-center justify-center text-6xl shadow-[0_0_50px_#fff] animate-pulse-glow mx-auto";
+            cr.innerHTML = `<i class="fa-solid fa-certificate"></i>`; // Core icon
+
+            document.querySelector('#resultSection h3').innerText = "GALAXY WISDOM CORE DIPULIHKAN!";
+            document.querySelector('#resultSection p').innerText = "Kegelapan Avidya sirna. Seluruh ajaran Sad Darsana kini menyatu memberikan cahaya kebenaran.";
+            
+            document.getElementById('resultRewards').innerHTML = `
+                <div class="bg-yellow-500/20 border border-yellow-500 px-6 py-3 rounded-lg text-yellow-300 font-space font-bold text-lg text-center w-full shadow-[0_0_15px_rgba(234,179,8,0.5)]">
+                    <i class="fa-solid fa-crown block text-2xl mb-1"></i>
+                    Gelar Diperoleh: GRAND MASTER OF DARSANA
+                </div>
+            `;
+
+            // Reset button action back for normal close
+            const btn = document.querySelector('#resultSection button');
+            btn.innerText = "Selesaikan Petualangan";
+            btn.onclick = closeModalAndUpdate;
+        }
+
+        // --- Utility ---
+        function showToast(title, msg, iconClass, iconColorClass) {
+            const tc = document.getElementById('toastContainer');
+            const toast = document.createElement('div');
+            toast.className = "glass-panel p-3 rounded-lg border border-white/20 shadow-lg flex items-center gap-3 transform translate-x-full transition-transform duration-300 min-w-[250px]";
+            toast.innerHTML = `
+                <div class="w-8 h-8 rounded-full bg-black/50 flex items-center justify-center ${iconColorClass}">
+                    <i class="fa-solid ${iconClass}"></i>
+                </div>
+                <div>
+                    <h4 class="font-space font-bold text-xs text-white">${title}</h4>
+                    <p class="text-[10px] text-slate-300">${msg}</p>
+                </div>
+            `;
+            tc.appendChild(toast);
+            
+            // Animate in
+            requestAnimationFrame(() => toast.classList.remove('translate-x-full'));
+            
+            // Remove after delay
+            setTimeout(() => {
+                toast.classList.add('translate-x-full');
+                setTimeout(() => toast.remove(), 300);
+            }, 3000);
+        }
+
+        // Init
+        window.addEventListener('DOMContentLoaded', initUI);
+
+    </script>
+</body>
+</html>
